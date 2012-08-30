@@ -864,7 +864,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   uri = state->uri;
 
   /* the uri contains the stream number we added in the SDP config, which is
-   * always /stream=%d so we need to strip that off 
+   * always /stream=%d so we need to strip that off
    * parse the stream we need to configure, look for the stream in the abspath
    * first and then in the query. */
   if (uri->abspath == NULL || !(pos = strstr (uri->abspath, "/stream="))) {
@@ -1361,7 +1361,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   state.session = session;
 
   if (client->auth) {
-    if (!gst_rtsp_auth_check (client->auth, client, &state))
+    if (!gst_rtsp_auth_check (client->auth, client, 0, &state))
       goto not_authorized;
   }
 
@@ -1903,7 +1903,7 @@ client_watch_notify (GstRTSPClient * client)
  * @client: a #GstRTSPClient
  * @channel: a #GIOChannel
  *
- * Accept a new connection for @client on the socket in @channel. 
+ * Accept a new connection for @client on the socket in @channel.
  *
  * This function should be called when the client properties and urls are fully
  * configured and the client is ready to start.

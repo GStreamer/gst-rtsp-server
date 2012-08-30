@@ -87,8 +87,6 @@ static void
 gst_rtsp_auth_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec)
 {
-  GstRTSPAuth *auth = GST_RTSP_AUTH (object);
-
   switch (propid) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -99,8 +97,6 @@ static void
 gst_rtsp_auth_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRTSPAuth *auth = GST_RTSP_AUTH (object);
-
   switch (propid) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -189,7 +185,7 @@ default_check_method (GstRTSPAuth * auth, GstRTSPClient * client,
   gboolean result = TRUE;
   GstRTSPResult res;
 
-  if (state->method & auth->methods != 0) {
+  if ((state->method & auth->methods) != 0) {
     gchar *authorization;
 
     result = FALSE;
@@ -221,7 +217,7 @@ no_auth:
 }
 
 /**
- * gst_rtsp_auth_check_method:
+ * gst_rtsp_auth_check:
  * @auth: a #GstRTSPAuth
  * @client: the client
  * @hint: a hint

@@ -124,7 +124,6 @@ typedef struct
 static gboolean
 payloader_filter (GstPluginFeature * feature, FilterData * data)
 {
-  gboolean res;
   const gchar *klass;
   GstElementFactory *fact;
   GList **list = NULL;
@@ -293,7 +292,7 @@ gst_rtsp_media_factory_uri_get_uri (GstRTSPMediaFactoryURI * factory)
 static GstElementFactory *
 find_payloader (GstRTSPMediaFactoryURI * urifact, GstCaps * caps)
 {
-  GList *list, *tmp;
+  GList *list;
   GstElementFactory *factory = NULL;
 
   /* first find a demuxer that can link */
@@ -340,10 +339,8 @@ static gboolean
 autoplug_continue_cb (GstElement * uribin, GstPad * pad, GstCaps * caps,
     GstElement * element)
 {
-  GList *list, *tmp;
   FactoryData *data;
   GstElementFactory *factory;
-  gboolean res;
 
   GST_DEBUG ("found pad %s:%s of caps %" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);

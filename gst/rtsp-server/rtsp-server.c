@@ -793,7 +793,7 @@ gboolean
 gst_rtsp_server_io_func (GIOChannel * channel, GIOCondition condition,
     GstRTSPServer * server)
 {
-  gboolean result;
+  gboolean result = FALSE;
   GstRTSPClient *client = NULL;
   GstRTSPServerClass *klass;
 
