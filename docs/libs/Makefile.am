@@ -61,7 +61,8 @@ HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
 CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 
 SCANOBJ_DEPS = \
-	$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS)
 
 # Extra options to supply to gtkdoc-scan.
 SCANOBJ_OPTIONS=--type-init-func="g_type_init();gst_init(&argc,&argv)"
@@ -91,7 +92,8 @@ extra_files =
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
-GTKDOC_CFLAGS = -I$(top_srcdir) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GST_PBUTILS_CFLAGS)
+GTKDOC_CFLAGS = -I$(top_srcdir) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
+		$(GST_CFLAGS) $(GST_PBUTILS_CFLAGS)
 GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_BASE_LIBS) $(GST_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
