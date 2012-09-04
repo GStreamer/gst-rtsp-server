@@ -367,7 +367,7 @@ collect_media_stats (GstRTSPMedia * media)
  * gst_rtsp_media_new:
  *
  * Create a new #GstRTSPMedia instance. The #GstRTSPMedia object contains the
- * element to produde RTP data for one or more related (audio/video/..) 
+ * element to produce RTP data for one or more related (audio/video/..)
  * streams.
  *
  * Returns: a new #GstRTSPMedia object.
@@ -1084,7 +1084,8 @@ find_transport (GstRTSPMediaStream * stream, const gchar * rtcp_from)
   port = atoi (tmp + 1);
   dest = g_strndup (rtcp_from, tmp - rtcp_from);
 
-  GST_INFO ("finding %s:%d", dest, port);
+  GST_INFO ("finding %s:%d in %d transports", dest, port,
+      g_list_length (stream->transports));
 
   for (walk = stream->transports; walk; walk = g_list_next (walk)) {
     GstRTSPMediaTrans *trans = walk->data;
@@ -1104,13 +1105,11 @@ find_transport (GstRTSPMediaStream * stream, const gchar * rtcp_from)
   return result;
 }
 
-static void
-on_new_ssrc (GObject * session, GObject * source, GstRTSPMediaStream * stream)
+static GstRTSPMediaTrans *
+check_transport (GObject * source, GstRTSPMediaStream * stream)
 {
   GstStructure *stats;
   GstRTSPMediaTrans *trans;
-
-  GST_INFO ("%p: new source %p", stream, source);
 
   /* see if we have a stream to match with the origin of the RTCP packet */
   trans = g_object_get_qdata (source, ssrc_stream_map_key);
@@ -1133,9 +1132,22 @@ on_new_ssrc (GObject * session, GObject * source, GstRTSPMediaStream * stream)
       }
       gst_structure_free (stats);
     }
-  } else {
-    GST_INFO ("%p: source %p for transport %p", stream, source, trans);
   }
+
+  return trans;
+}
+
+static void
+on_new_ssrc (GObject * session, GObject * source, GstRTSPMediaStream * stream)
+{
+  GstRTSPMediaTrans *trans;
+
+  GST_INFO ("%p: new source %p", stream, source);
+
+  trans = check_transport (source, stream);
+
+  if (trans)
+    GST_INFO ("%p: source %p for transport %p", stream, source, trans);
 }
 
 static void
@@ -1150,9 +1162,10 @@ on_ssrc_active (GObject * session, GObject * source,
 {
   GstRTSPMediaTrans *trans;
 
-  trans = g_object_get_qdata (source, ssrc_stream_map_key);
+  trans = check_transport (source, stream);
 
-  GST_INFO ("%p: source %p in transport %p is active", stream, source, trans);
+  if (trans)
+    GST_INFO ("%p: source %p in transport %p is active", stream, source, trans);
 
   if (trans && trans->keep_alive)
     trans->keep_alive (trans->ka_user_data);
