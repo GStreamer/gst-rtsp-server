@@ -20,6 +20,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 

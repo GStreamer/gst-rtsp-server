@@ -16,6 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include "rtsp-session-pool.h"
 

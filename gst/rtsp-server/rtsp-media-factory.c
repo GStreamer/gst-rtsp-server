@@ -17,6 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include "rtsp-media-factory.h"
 
 #define DEFAULT_LAUNCH          NULL
