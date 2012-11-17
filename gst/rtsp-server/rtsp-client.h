@@ -103,6 +103,8 @@ struct _GstRTSPClient {
 
   GList *streams;
   GList *sessions;
+
+  guint teardown_response_seq;
 };
 
 struct _GstRTSPClientClass {
