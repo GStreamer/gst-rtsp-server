@@ -172,7 +172,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 static void
 gst_rtsp_client_init (GstRTSPClient * client)
 {
-  client->teardown_response_seq = 0;
+  client->close_response_seq = 0;
 }
 
 static void
@@ -293,7 +293,7 @@ gst_rtsp_client_new (void)
 
 static void
 send_response (GstRTSPClient * client, GstRTSPSession * session,
-    GstRTSPMessage * response, guint * id)
+    GstRTSPMessage * response, gboolean close)
 {
   gst_rtsp_message_add_header (response, GST_RTSP_HDR_SERVER,
       "GStreamer RTSP server");
@@ -319,7 +319,13 @@ send_response (GstRTSPClient * client, GstRTSPSession * session,
     gst_rtsp_message_dump (response);
   }
 
-  gst_rtsp_watch_send_message (client->watch, response, id);
+  if (close) {
+    gst_rtsp_message_add_header (response, GST_RTSP_HDR_CONNECTION, "close");
+  }
+  /* send the response and store the seq number so we can wait until it's
+   * written to the client to close the connection */
+  gst_rtsp_watch_send_message (client->watch, response, close ?
+      &client->close_response_seq : NULL);
   gst_rtsp_message_unset (response);
 }
 
@@ -330,7 +336,7 @@ send_generic_response (GstRTSPClient * client, GstRTSPStatusCode code,
   gst_rtsp_message_init_response (state->response, code,
       gst_rtsp_status_as_text (code), state->request);
 
-  send_response (client, NULL, state->response, NULL);
+  send_response (client, NULL, state->response, FALSE);
 }
 
 static void
@@ -345,7 +351,7 @@ handle_unauthorized_request (GstRTSPClient * client, GstRTSPAuth * auth,
     gst_rtsp_auth_setup_auth (auth, client, 0, state);
   }
 
-  send_response (client, state->session, state->response, NULL);
+  send_response (client, state->session, state->response, FALSE);
 }
 
 
@@ -612,13 +618,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
   gst_rtsp_message_init_response (state->response, code,
       gst_rtsp_status_as_text (code), state->request);
 
-  gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_CONNECTION,
-      "close");
-
-  /* send the response and store the seq number so we can wait until it's
-   * written to the client to close the connection */
-  send_response (client, session, state->response,
-      &client->teardown_response_seq);
+  send_response (client, session, state->response, TRUE);
 
   /* we emit the signal before closing the connection */
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST],
@@ -659,7 +659,7 @@ handle_get_param_request (GstRTSPClient * client, GstRTSPClientState * state)
     if (res != GST_RTSP_OK)
       goto bad_request;
 
-    send_response (client, state->session, state->response, NULL);
+    send_response (client, state->session, state->response, FALSE);
   }
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_GET_PARAMETER_REQUEST],
@@ -695,7 +695,7 @@ handle_set_param_request (GstRTSPClient * client, GstRTSPClientState * state)
     if (res != GST_RTSP_OK)
       goto bad_request;
 
-    send_response (client, state->session, state->response, NULL);
+    send_response (client, state->session, state->response, FALSE);
   }
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_SET_PARAMETER_REQUEST],
@@ -744,7 +744,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
   gst_rtsp_message_init_response (state->response, code,
       gst_rtsp_status_as_text (code), state->request);
 
-  send_response (client, session, state->response, NULL);
+  send_response (client, session, state->response, FALSE);
 
   /* the state is now READY */
   media->state = GST_RTSP_STATE_READY;
@@ -880,7 +880,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   str = gst_rtsp_media_get_range_string (media->media, TRUE);
   gst_rtsp_message_take_header (state->response, GST_RTSP_HDR_RANGE, str);
 
-  send_response (client, session, state->response, NULL);
+  send_response (client, session, state->response, FALSE);
 
   /* start playing after sending the request */
   gst_rtsp_session_media_set_state (media, GST_STATE_PLAYING);
@@ -1086,7 +1086,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
       trans_str);
   g_free (trans_str);
 
-  send_response (client, session, state->response, NULL);
+  send_response (client, session, state->response, FALSE);
 
   /* update the state */
   switch (media->state) {
@@ -1267,7 +1267,7 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
   gst_rtsp_message_take_body (state->response, (guint8 *) str, strlen (str));
   gst_sdp_message_free (sdp);
 
-  send_response (client, state->session, state->response, NULL);
+  send_response (client, state->session, state->response, FALSE);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_DESCRIBE_REQUEST],
       0, state);
@@ -1309,7 +1309,7 @@ handle_options_request (GstRTSPClient * client, GstRTSPClientState * state)
   gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_PUBLIC, str);
   g_free (str);
 
-  send_response (client, state->session, state->response, NULL);
+  send_response (client, state->session, state->response, FALSE);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_OPTIONS_REQUEST],
       0, state);
@@ -1769,8 +1769,8 @@ message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
   GstRTSPClient *client;
 
   client = GST_RTSP_CLIENT (user_data);
-  if (client->teardown_response_seq && client->teardown_response_seq == cseq) {
-    client->teardown_response_seq = 0;
+  if (client->close_response_seq && client->close_response_seq == cseq) {
+    client->close_response_seq = 0;
     close_connection (client);
   }
 
