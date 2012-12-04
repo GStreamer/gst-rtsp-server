@@ -236,10 +236,6 @@ gst_rtsp_media_finalize (GObject * obj)
   g_list_foreach (media->dynamic, (GFunc) gst_object_unref, NULL);
   g_list_free (media->dynamic);
 
-  if (media->source) {
-    g_source_destroy (media->source);
-    g_source_unref (media->source);
-  }
   g_free (media->multicast_group);
   g_mutex_free (media->lock);
   g_cond_free (media->cond);
@@ -1640,6 +1636,13 @@ bus_message (GstBus * bus, GstMessage * message, GstRTSPMedia * media)
   return ret;
 }
 
+static void
+watch_destroyed (GstRTSPMedia * media)
+{
+  GST_DEBUG_OBJECT (media, "source destroyed");
+  g_object_unref (media);
+}
+
 /* called from streaming threads */
 static void
 pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
@@ -1737,7 +1740,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   media->source = gst_bus_create_watch (bus);
   gst_object_unref (bus);
 
-  g_source_set_callback (media->source, (GSourceFunc) bus_message, media, NULL);
+  g_source_set_callback (media->source, (GSourceFunc) bus_message,
+      g_object_ref (media), (GDestroyNotify) watch_destroyed);
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
   media->id = g_source_attach (media->source, klass->context);
@@ -1867,6 +1871,13 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   /* when the media is not reusable, this will effectively unref the media and
    * recreate it */
   g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_UNPREPARED], 0, NULL);
+
+  /* the source has the last ref to the media */
+  if (media->source) {
+    GST_DEBUG ("destroy source");
+    g_source_destroy (media->source);
+    g_source_unref (media->source);
+  }
 
   return success;
 }
