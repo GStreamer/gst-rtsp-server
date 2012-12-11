@@ -1609,7 +1609,12 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
         GST_DEBUG ("shutting down after EOS");
         gst_element_set_state (media->pipeline, GST_STATE_NULL);
         media->eos_pending = FALSE;
-        g_object_unref (media);
+        /* the source has the last ref to the media */
+        if (media->source) {
+          GST_DEBUG ("destroy source");
+          g_source_destroy (media->source);
+          g_source_unref (media->source);
+        }
       }
       break;
     default:
@@ -1873,7 +1878,7 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_UNPREPARED], 0, NULL);
 
   /* the source has the last ref to the media */
-  if (media->source) {
+  if (!media->eos_shutdown && media->source) {
     GST_DEBUG ("destroy source");
     g_source_destroy (media->source);
     g_source_unref (media->source);
@@ -1887,8 +1892,6 @@ default_unprepare (GstRTSPMedia * media)
 {
   if (media->eos_shutdown) {
     GST_DEBUG ("sending EOS for shutdown");
-    /* ref so that we don't disappear */
-    g_object_ref (media);
     media->eos_pending = TRUE;
     gst_element_send_event (media->pipeline, gst_event_new_eos ());
     /* we need to go to playing again for the EOS to propagate, normally in this
