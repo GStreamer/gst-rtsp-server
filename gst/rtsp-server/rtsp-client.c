@@ -2040,6 +2040,10 @@ gst_rtsp_client_accept (GstRTSPClient * client, GIOChannel * channel)
   client->watch = gst_rtsp_watch_new (client->connection, &watch_funcs,
       g_object_ref (client), (GDestroyNotify) client_watch_notify);
 
+  /* FIXME make this configurable. We don't want to do this yet because it will
+   * be superceeded by a cache object later */
+  gst_rtsp_watch_set_send_backlog (client->watch, 0, 100);
+
   /* find the context to add the watch */
   if ((source = g_main_current_source ()))
     context = g_source_get_context (source);
