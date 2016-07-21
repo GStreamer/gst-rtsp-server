@@ -866,7 +866,9 @@ gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
  * @stream: a #GstRTSPStream
  * @family: the #GSocketFamily
  *
- * Get the multicast address of @stream for @family.
+ * Get the multicast address of @stream for @family. The original
+ * #GstRTSPAddress is cached and copy is returned, so freeing the return value
+ * won't release the address from the pool.
  *
  * Returns: (transfer full) (nullable): the #GstRTSPAddress of @stream
  * or %NULL when no address could be allocated. gst_rtsp_address_free()
@@ -932,7 +934,9 @@ no_address:
  * @n_ports: n_ports
  * @ttl: a TTL
  *
- * Reserve @address and @port as the address and port of @stream.
+ * Reserve @address and @port as the address and port of @stream. The original
+ * #GstRTSPAddress is cached and copy is returned, so freeing the return value
+ * won't release the address from the pool.
  *
  * Returns: (nullable): the #GstRTSPAddress of @stream or %NULL when
  * the address could be reserved. gst_rtsp_address_free() after usage.
