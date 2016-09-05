@@ -2486,7 +2486,7 @@ create_mcast_part_for_transport (GstRTSPStream * stream,
 
   /* Add receiver part */
   create_and_configure_udpsources (mcast_udpsrc, rtp_socket, rtcp_socket);
-  if (priv->srcpad) {
+  if (priv->sinkpad) {
     plug_src (stream, priv->joined_bin, mcast_udpsrc[0], priv->funnel[0]);
     gst_element_sync_state_with_parent (mcast_udpsrc[0]);
   }
@@ -2500,10 +2500,16 @@ create_mcast_part_for_transport (GstRTSPStream * stream,
     g_assert (!priv->mcast_udpqueue[1]);
 
     create_and_configure_udpsinks (stream, priv->mcast_udpsink);
+
+    g_signal_emit_by_name (priv->mcast_udpsink[0], "add", mcast_addr->address,
+        mcast_addr->port, NULL);
+    g_signal_emit_by_name (priv->mcast_udpsink[1], "add", mcast_addr->address,
+        mcast_addr->port + 1, NULL);
+
     set_sockets_for_udpsinks (priv->mcast_udpsink, rtp_socket, rtcp_socket,
         family);
 
-    if (priv->sinkpad) {
+    if (priv->srcpad) {
       plug_sink (priv->joined_bin, priv->tee[0], priv->mcast_udpsink[0],
           &priv->mcast_udpqueue[0]);
       gst_element_sync_state_with_parent (priv->mcast_udpsink[0]);
