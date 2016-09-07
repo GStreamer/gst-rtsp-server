@@ -1007,7 +1007,7 @@ no_address:
 different_address:
   {
     GST_ERROR_OBJECT (stream,
-        "address %s is not the same as %s that was already" " reserved",
+        "address %s is not the same as %s that was already reserved",
         address, (*addrp)->address);
     g_mutex_unlock (&priv->lock);
     return NULL;
