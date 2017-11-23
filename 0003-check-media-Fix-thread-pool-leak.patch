@@ -1,0 +1,26 @@
+From f5572cf19318273adab02a1d2177d21c537eb4cd Mon Sep 17 00:00:00 2001
+From: Patricia Muscalu <patricia@axis.com>
+Date: Thu, 23 Nov 2017 18:51:21 +0100
+Subject: [PATCH 3/4] check/media: Fix thread pool leak.
+
+Change-Id: I0f92b1caca0ee518ae64a7dacfbd28a214c3eea1
+---
+ tests/check/gst/media.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/tests/check/gst/media.c b/tests/check/gst/media.c
+index 99f19b0..e143916 100644
+--- a/tests/check/gst/media.c
++++ b/tests/check/gst/media.c
+@@ -253,6 +253,8 @@ test_prepare_reusable (const gchar * launch_line)
+   g_object_unref (media);
+   gst_rtsp_url_free (url);
+   g_object_unref (factory);
++
++  g_object_unref (pool);
+ }
+ 
+ GST_START_TEST (test_media_reusable)
+-- 
+2.11.0
+
