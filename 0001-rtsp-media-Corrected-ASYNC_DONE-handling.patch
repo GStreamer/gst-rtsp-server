@@ -1,0 +1,79 @@
+From 6cdd70cf18db5319fb16b9cfcb47578ba4d89cb3 Mon Sep 17 00:00:00 2001
+From: Patricia Muscalu <patricia@axis.com>
+Date: Thu, 23 Nov 2017 09:10:54 +0100
+Subject: [PATCH 1/4] rtsp-media: Corrected ASYNC_DONE handling
+
+Media is complete when all the transport based parts are
+added to the media pipeline. At this point ASYNC_DONE is
+posted by the media pipeline and media is ready to enter
+the PREPARED state.
+
+Change-Id: I50fb8dfed88ebaf057d9a35fca2d7f0a70e9d1fa
+---
+ gst/rtsp-server/rtsp-media.c | 22 ++++++++--------------
+ 1 file changed, 8 insertions(+), 14 deletions(-)
+
+diff --git a/gst/rtsp-server/rtsp-media.c b/gst/rtsp-server/rtsp-media.c
+index d158938..d4e4282 100644
+--- a/gst/rtsp-server/rtsp-media.c
++++ b/gst/rtsp-server/rtsp-media.c
+@@ -112,7 +112,7 @@ struct _GstRTSPMediaPrivate
+   GstRTSPMediaStatus status;    /* protected by lock */
+   gint prepare_count;
+   gint n_active;
+-  gboolean adding;
++  gboolean complete;
+ 
+   /* the pipeline for the media */
+   GstElement *pipeline;
+@@ -2569,13 +2569,11 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
+     case GST_MESSAGE_STREAM_STATUS:
+       break;
+     case GST_MESSAGE_ASYNC_DONE:
+-      if (priv->adding) {
+-        /* when we are dynamically adding pads, the addition of the udpsrc will
+-         * temporarily produce ASYNC_DONE messages. We have to ignore them and
+-         * wait for the final ASYNC_DONE after everything prerolled */
+-        GST_INFO ("%p: ignoring ASYNC_DONE", media);
+-      } else {
+-        GST_INFO ("%p: got ASYNC_DONE", media);
++      if (priv->complete) {
++         /* receive the final ASYNC_DONE, that is posted by the media pipeline
++          * after all the transport parts have been successfully added to
++          * the media streams. */
++        GST_DEBUG_OBJECT (media, "got async-done");
+         if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
+           gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
+       }
+@@ -2678,11 +2676,6 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
+ 
+   g_object_set_data (G_OBJECT (pad), "gst-rtsp-dynpad-stream", stream);
+ 
+-  /* we will be adding elements below that will cause ASYNC_DONE to be
+-   * posted in the bus. We want to ignore those messages until the
+-   * pipeline really prerolled. */
+-  priv->adding = TRUE;
+-
+   /* join the element in the PAUSED state because this callback is
+    * called from the streaming thread and it is PAUSED */
+   if (!gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
+@@ -2693,7 +2686,6 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
+   if (priv->blocked)
+     gst_rtsp_stream_set_blocked (stream, TRUE);
+ 
+-  priv->adding = FALSE;
+   g_rec_mutex_unlock (&priv->state_lock);
+ 
+   return;
+@@ -4118,6 +4110,8 @@ gst_rtsp_media_complete_pipeline (GstRTSPMedia * media, GPtrArray * transports)
+       return FALSE;
+     }
+   }
++
++  priv->complete = TRUE;
+   g_mutex_unlock (&priv->lock);
+ 
+   return TRUE;
+-- 
+2.11.0
+
