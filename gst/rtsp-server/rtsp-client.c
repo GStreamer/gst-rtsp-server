@@ -3328,6 +3328,12 @@ sanitize_uri (GstRTSPUrl * uri)
   s = d = uri->abspath;
   len = strlen (uri->abspath);
 
+  if (len == 0 || !strcmp(uri->abspath, "/stream=0")) {
+    g_free(uri->abspath);
+    uri->abspath = g_strdup("/");
+    return;
+  }
+
   prev_slash = FALSE;
 
   for (i = 0; i < len; i++) {
