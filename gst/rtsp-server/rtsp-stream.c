@@ -427,7 +427,8 @@ gst_rtsp_stream_finalize (GObject * obj)
   g_free (priv->multicast_iface);
   g_list_free_full (priv->mcast_clients, (GDestroyNotify) free_mcast_client);
 
-  gst_object_unref (priv->payloader);
+  if (priv->payloader)
+    gst_object_unref (priv->payloader);
   if (priv->srcpad)
     gst_object_unref (priv->srcpad);
   if (priv->sinkpad)
