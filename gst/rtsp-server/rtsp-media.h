@@ -209,6 +209,9 @@ GST_RTSP_SERVER_API
 GstRTSPMediaStatus    gst_rtsp_media_get_status       (GstRTSPMedia *media);
 
 GST_RTSP_SERVER_API
+void                  gst_rtsp_media_set_status       (GstRTSPMedia * media, GstRTSPMediaStatus status);
+
+GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_permissions  (GstRTSPMedia *media,
                                                        GstRTSPPermissions *permissions);
 

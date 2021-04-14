@@ -2784,7 +2784,7 @@ media_streams_set_blocked (GstRTSPMedia * media, gboolean blocked)
     priv->blocking_msg_received = 0;
 }
 
-static void
+void
 gst_rtsp_media_set_status (GstRTSPMedia * media, GstRTSPMediaStatus status)
 {
   GstRTSPMediaPrivate *priv = media->priv;
