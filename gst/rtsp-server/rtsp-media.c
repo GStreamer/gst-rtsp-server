@@ -3136,11 +3136,13 @@ static GstStateChangeReturn
 set_state (GstRTSPMedia * media, GstState state)
 {
   GstRTSPMediaPrivate *priv = media->priv;
-  GstStateChangeReturn ret;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   GST_INFO ("set state to %s for media %p", gst_element_state_get_name (state),
       media);
-  ret = gst_element_set_state (priv->pipeline, state);
+
+  if (priv->pipeline)
+    ret = gst_element_set_state (priv->pipeline, state);
 
   return ret;
 }
