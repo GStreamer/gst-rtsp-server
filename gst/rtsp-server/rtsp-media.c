@@ -523,7 +523,8 @@ gst_rtsp_media_finalize (GObject * obj)
     gst_object_unref (priv->pipeline);
   if (priv->nettime)
     gst_object_unref (priv->nettime);
-  gst_object_unref (priv->element);
+  if (priv->element)
+    gst_object_unref (priv->element);
   if (priv->pool)
     g_object_unref (priv->pool);
   if (priv->payloads)
@@ -608,7 +609,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
   switch (propid) {
     case PROP_ELEMENT:
       media->priv->element = g_value_get_object (value);
-      gst_object_ref_sink (media->priv->element);
+      if (media->priv->element) {
+        gst_object_ref_sink (media->priv->element);
+      }
       break;
     case PROP_SHARED:
       gst_rtsp_media_set_shared (media, g_value_get_boolean (value));
