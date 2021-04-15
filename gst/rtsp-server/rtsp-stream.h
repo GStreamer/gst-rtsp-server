@@ -81,6 +81,9 @@ GstRTSPStream *   gst_rtsp_stream_new              (guint idx, GstElement *paylo
                                                     GstPad *pad);
 
 GST_RTSP_SERVER_API
+void              gst_rtsp_stream_set_index        (GstRTSPStream *stream, guint idx);
+
+GST_RTSP_SERVER_API
 guint             gst_rtsp_stream_get_index        (GstRTSPStream *stream);
 
 GST_RTSP_SERVER_API

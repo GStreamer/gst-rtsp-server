@@ -550,6 +550,23 @@ gst_rtsp_stream_new (guint idx, GstElement * payloader, GstPad * pad)
 }
 
 /**
+ * gst_rtsp_stream_set_index:
+ * @stream: a #GstRTSPStream
+ * @idx: the stream index
+ *
+ * Set the stream index.
+ *
+ */
+void
+gst_rtsp_stream_set_index (GstRTSPStream * stream, guint idx)
+{
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  stream->priv->idx = idx;
+}
+
+
+/**
  * gst_rtsp_stream_get_index:
  * @stream: a #GstRTSPStream
  *
