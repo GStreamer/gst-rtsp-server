@@ -1657,6 +1657,9 @@ update_stream_storage_size (GstRTSPMedia * media, GstRTSPStream * stream,
 {
   GObject *storage = NULL;
 
+  if (!media->priv->rtpbin)
+    return;
+
   g_signal_emit_by_name (G_OBJECT (media->priv->rtpbin), "get-storage",
       sessid, &storage);
 
