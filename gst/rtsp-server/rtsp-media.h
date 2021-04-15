@@ -365,6 +365,10 @@ GST_RTSP_SERVER_API
 void                  gst_rtsp_media_collect_streams  (GstRTSPMedia *media);
 
 GST_RTSP_SERVER_API
+void                  gst_rtsp_media_add_stream       (GstRTSPMedia *media,
+                                                       GstRTSPStream * stream);
+
+GST_RTSP_SERVER_API
 GstRTSPStream *       gst_rtsp_media_create_stream    (GstRTSPMedia *media,
                                                        GstElement *payloader,
                                                        GstPad *pad);

@@ -2334,6 +2334,41 @@ appsrc_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 }
 
 /**
+ * gst_rtsp_media_add_stream:
+ * @media: a #GstRTSPMedia
+ * @stream: (transfer full): a #GstRTSPStream
+ *
+ * Add a new stream in @media.
+ *
+ */
+void
+gst_rtsp_media_add_stream (GstRTSPMedia *media, GstRTSPStream * stream)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  priv = media->priv;
+  g_mutex_lock (&priv->lock);
+
+  if (priv->pool)
+    gst_rtsp_stream_set_address_pool (stream, priv->pool);
+  gst_rtsp_stream_set_multicast_iface (stream, priv->multicast_iface);
+  gst_rtsp_stream_set_max_mcast_ttl (stream, priv->max_mcast_ttl);
+  gst_rtsp_stream_set_bind_mcast_address (stream, priv->bind_mcast_address);
+  gst_rtsp_stream_set_profiles (stream, priv->profiles);
+  gst_rtsp_stream_set_protocols (stream, priv->protocols);
+  gst_rtsp_stream_set_retransmission_time (stream, priv->rtx_time);
+  gst_rtsp_stream_set_buffer_size (stream, priv->buffer_size);
+  gst_rtsp_stream_set_publish_clock_mode (stream, priv->publish_clock_mode);
+  gst_rtsp_stream_set_rate_control (stream, priv->do_rate_control);
+
+  g_ptr_array_add (priv->streams, stream);
+  g_mutex_unlock (&priv->lock);
+}
+
+
+/**
  * gst_rtsp_media_create_stream:
  * @media: a #GstRTSPMedia
  * @payloader: a #GstElement
