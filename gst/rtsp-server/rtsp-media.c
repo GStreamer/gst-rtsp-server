@@ -3937,6 +3937,10 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
       goto prepare_failed;
   }
 
+  if (klass->is_live) {
+    priv->is_live = klass->is_live(media);
+  }
+
 wait_status:
   g_rec_mutex_unlock (&priv->state_lock);
 

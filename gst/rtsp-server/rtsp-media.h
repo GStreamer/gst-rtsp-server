@@ -174,6 +174,7 @@ struct _GstRTSPMediaClass {
   GstElement *    (*create_rtpbin)   (GstRTSPMedia *media);
   gboolean        (*setup_rtpbin)    (GstRTSPMedia *media, GstElement *rtpbin);
   gboolean        (*setup_sdp)       (GstRTSPMedia *media, GstSDPMessage *sdp, GstSDPInfo *info);
+  gboolean        (*is_live)         (GstRTSPMedia *media);
 
   /* signals */
   void            (*new_stream)      (GstRTSPMedia *media, GstRTSPStream * stream);
