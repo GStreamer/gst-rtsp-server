@@ -63,6 +63,12 @@ struct _GstRTSPStream {
 struct _GstRTSPStreamClass {
   GObjectClass parent_class;
 
+  /* vmethods */
+  void            (*get_ssrc)          (GstRTSPStream *stream, guint *ssrc);
+  gboolean        (*complete_stream)   (GstRTSPStream *stream, const GstRTSPTransport *trans);
+  gboolean        (*add_transport)     (GstRTSPStream *stream, GstRTSPStreamTransport *trans);
+  gboolean        (*remove_transport)  (GstRTSPStream *stream, GstRTSPStreamTransport *trans);
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };

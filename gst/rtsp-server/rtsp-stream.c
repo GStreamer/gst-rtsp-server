@@ -274,6 +274,18 @@ static gboolean
 update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
     gboolean add);
 
+static gboolean
+default_complete_stream (GstRTSPStream * stream,
+    const GstRTSPTransport * transport);
+static gboolean
+default_add_transport (GstRTSPStream * stream,
+    GstRTSPStreamTransport * trans);
+static gboolean
+default_remove_transport (GstRTSPStream * stream,
+    GstRTSPStreamTransport * trans);
+static void
+default_get_ssrc (GstRTSPStream * stream, guint * ssrc);
+
 static guint gst_rtsp_stream_signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPStream, gst_rtsp_stream, G_TYPE_OBJECT);
@@ -288,6 +300,11 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
   gobject_class->get_property = gst_rtsp_stream_get_property;
   gobject_class->set_property = gst_rtsp_stream_set_property;
   gobject_class->finalize = gst_rtsp_stream_finalize;
+
+  klass->complete_stream = default_complete_stream;
+  klass->add_transport = default_add_transport;
+  klass->remove_transport = default_remove_transport;
+  klass->get_ssrc = default_get_ssrc;
 
   g_object_class_install_property (gobject_class, PROP_CONTROL,
       g_param_spec_string ("control", "Control",
@@ -2042,6 +2059,22 @@ gst_rtsp_stream_get_srtp_encoder (GstRTSPStream * stream)
  */
 void
 gst_rtsp_stream_get_ssrc (GstRTSPStream * stream, guint * ssrc)
+{
+  GstRTSPStreamClass *klass;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  klass = GST_RTSP_STREAM_GET_CLASS (stream);
+
+  if (klass->get_ssrc) {
+    klass->get_ssrc(stream, ssrc);
+  } else if (ssrc) {
+    *ssrc = 0;
+  }
+}
+
+static void
+default_get_ssrc (GstRTSPStream * stream, guint * ssrc)
 {
   GstRTSPStreamPrivate *priv;
 
@@ -4841,6 +4874,22 @@ gboolean
 gst_rtsp_stream_add_transport (GstRTSPStream * stream,
     GstRTSPStreamTransport * trans)
 {
+  GstRTSPStreamClass *klass;
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  klass = GST_RTSP_STREAM_GET_CLASS (stream);
+
+  if (klass->add_transport) {
+    return klass->add_transport(stream, trans);
+  }
+  return FALSE;
+}
+
+
+static gboolean
+default_add_transport (GstRTSPStream * stream,
+    GstRTSPStreamTransport * trans)
+{
   GstRTSPStreamPrivate *priv;
   gboolean res;
 
@@ -4875,6 +4924,21 @@ gst_rtsp_stream_add_transport (GstRTSPStream * stream,
  */
 gboolean
 gst_rtsp_stream_remove_transport (GstRTSPStream * stream,
+    GstRTSPStreamTransport * trans)
+{
+  GstRTSPStreamClass *klass;
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  klass = GST_RTSP_STREAM_GET_CLASS (stream);
+
+  if (klass->remove_transport) {
+    return klass->remove_transport(stream, trans);
+  }
+  return FALSE;
+}
+
+static gboolean
+default_remove_transport (GstRTSPStream * stream,
     GstRTSPStreamTransport * trans)
 {
   GstRTSPStreamPrivate *priv;
@@ -5747,6 +5811,23 @@ beach:
  */
 gboolean
 gst_rtsp_stream_complete_stream (GstRTSPStream * stream,
+    const GstRTSPTransport * transport)
+{
+  GstRTSPStreamClass *klass;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  klass = GST_RTSP_STREAM_GET_CLASS (stream);
+
+  if (klass->complete_stream) {
+    return klass->complete_stream(stream, transport);
+  }
+  return FALSE;
+}
+
+
+static gboolean
+default_complete_stream (GstRTSPStream * stream,
     const GstRTSPTransport * transport)
 {
   GstRTSPStreamPrivate *priv;
