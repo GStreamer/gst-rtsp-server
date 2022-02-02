@@ -1,3 +1,91 @@
+=== release 1.18.6 ===
+
+2022-02-02 15:08:18 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.18.6
+
+2021-10-07 13:00:10 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Unprepare suspended medias too
+	  Previously suspended medias immediately reached the UNPREPARED state
+	  without going through the media's unprepare() vfunc. This didn't allow
+	  the media subclass to do any additional cleanup, and for example the
+	  shutdown-eos property of GstRTSPMedia was ignored.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/221>
+
+2022-01-20 17:13:36 -0600  Michael Gruner <michael.gruner@ridgerun.com>
+
+	* examples/test-appsrc2.c:
+	  gst-rtsp-server: Fix leak in appsrc2 example
+	  In the need-data appsrc callback, a buffer is pulled from the
+	  appsink. This buffer is then copied so that metadata is writable.
+	  The copy is pushed to the appsrc but it doesn't take ownership
+	  of the buffer so we need to manually unref it. The original buffer
+	  is finally unreffed when the sample is freed.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/220>
+
+2021-12-16 21:04:53 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fix get_rates raciness
+	  Prior to this patch, we considered that a stream was blocking
+	  whenever a pad probe was triggered for either the RTP pad or
+	  the RTCP pad.
+	  This led to situations where we subsequently unblocked and expected
+	  to find a segment on the RTP pad, which was racy.
+	  Instead, we now only consider that the stream is blocking when
+	  the pad probe for the RTP pad has triggered with a blockable object
+	  (buffer, buffer list, gap event).
+	  The RTCP pad is simply blocked without affecting the state of the
+	  stream otherwise.
+	  Fixes #929
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/218>
+
+2021-10-06 18:19:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Only unprepare a media if it was not already unpreparing anyway
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/216>
+
+2021-10-03 23:25:23 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	  rtsp-client: make sure sessmedia will not get freed while used
+	  handle_*_request() functions were all retrieving the session media from
+	  the session by calling gst_rtsp_session_get_media () which is a transfer-none
+	  call. If a session timeout happens at that time, the session media may get freed
+	  making the pointer invalid..
+	  Fixes #757
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/215>
+
+2021-10-05 19:37:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Also mark receive-only (RECORD) medias as prepared when unsuspending
+	  Previously the status was only changed for other medias.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/214>
+
+2021-10-01 13:51:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  rtsp-session: Don't unref medias twice if it is removed inside gst_rtsp_session_filter() while the mutex is shortly released
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/757
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/-/merge_requests/213>
+
+2021-09-09 00:13:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.18.5 ===
 
 2021-09-08 20:04:14 +0100  Tim-Philipp Müller <tim@centricular.com>
@@ -5,6 +93,7 @@
 	* ChangeLog:
 	* NEWS:
 	* RELEASE:
+	* docs/gst_plugins_cache.json:
 	* gst-rtsp-server.doap:
 	* meson.build:
 	  Release 1.18.5
